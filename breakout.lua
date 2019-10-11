@@ -1,6 +1,7 @@
 --------------
 -- BREAKOUT --
 --------------
+
 function _init()
  MODE = "START"
 end
@@ -12,8 +13,8 @@ function _update()
    update_start()
  elseif MODE == "GAMEOVER" then
    update_gameover()
- elseif MODE == "RESET" then
-   update_reset() 
+ elseif MODE == "WIN" then
+   update_win() 
   end            
 end
 
@@ -27,8 +28,6 @@ function update_game()
  elseif btnp(2) then --right arrow
   paddleX = paddleX + 5
   paddleDX = paddleDX + 5
- --elseif btnp(7) then --C Pressed?
-  --MODE="RESET"
  end
   nextX = ballX + ballDeltaX
   nextY = ballY + ballDeltaY  
@@ -52,22 +51,25 @@ function update_game()
    ballDeltaY = -ballDeltaY
    score = score + 1 
   end
-    
+   
+   local i   
+   for i =1,#brickX do           
    --if ball and brick collide
-  if brickVisable and ballCollide(nextX,nextY,brickX,brickY,brickW,brickH) then
-   SFX(4)
-   --make the ball bounce off brick
-   ballDeltaY = -ballDeltaY
-   brickVisable=false
-   score = score + 10 
-  end                 
+    if brickVisable[i] and ballCollide(nextX,nextY,brickX[i],brickY[i],brickW,brickH) then
+     SFX(4)
+     --make the ball bounce off brick
+     ballDeltaY = -ballDeltaY
+     brickVisable[i] = false
+     score = score + 10 
+    end                 
+  end
   
-   ballX = nextX
-   ballY = nextY    
+    ballX = nextX
+    ballY = nextY    
   
    if nextY > 128 then
    SFX(2)
-    lives = lives-1
+    lives = lives - 1
     serveBall()         
    end
    if lives < 0 then
@@ -83,6 +85,8 @@ function update_start()
   startGame()
 end
 
+function update_win()
+end
 
 function startGame()
  MODE="GAME"
@@ -93,12 +97,10 @@ function startGame()
  paddleDX = 2   --paddle speed
  paddleW = 30   --paddle width
  paddleH = 4    --paddle height
- 
-  brickX = 60   --brick X pos
-  brickY = 20  --brick Y pos
-  brickW = 10   --brick width
-  brickH = 4    --brick height     
-  brickVisable = true
+    
+ brickW = 10   --brick width
+ brickH = 4    --brick height     
+ buildBricks() 
  
  lives=3        --number of lives
  score=0
@@ -112,6 +114,17 @@ function serveBall()
  ballDeltaY = 1.2 --ball speed for Y       
 end 
 
+function buildBricks() 
+ local i
+ brickX = {}
+ brickY = {}
+ brickVisable = {}
+ for i =1,10 do
+   table.insert(brickX,5+(i-1)*(brickW+1))
+   table.insert(brickY,20)
+   table.insert(brickVisable,true)        
+ end    
+end
 
 function update_gameover()
  if btnp(5) then
@@ -141,7 +154,6 @@ function draw_start()
  print("BREAKOUT", 70, 50)
  color(11) --sets color of PRESS Z TO START
  print("PRESS Z TO START", 50, 60)
- --print("PRESS C TO RESET BALL", 40, 90)
  color(7) --sets color of "BREAKOUT"  
 end
 
@@ -161,18 +173,21 @@ function draw_game()
  --draw the paddle
  rect(paddleX,paddleY,paddleW,paddleH)
 
- if brickVisable then 
- --draw bricks
-   rect(brickX,brickY,brickW,brickH)
-  end
 
- --print the number of lives
- -- .. concatanates a string
+--draw bricks
+for i =1,#brickX do
+   if brickVisable then 
+    rect(brickX[i],brickY[i],brickW,brickH)
+   end                
+end                        
+
+ 
+
  print("LIVES:"..lives, 1, 1, 128)
  print("SCORE:"..score, 50, 1, 128)    
 end
 
-function draw_reset()  
+function draw_win()  
 end
 
 --check ball collision with rect
