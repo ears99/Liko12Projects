@@ -53,13 +53,13 @@ function update_game()
   end
    
    local i   
-   for i =1,#brickX do           
+   for i = 1,#brickX do           
    --if ball and brick collide
     if brickVisable[i] and ballCollide(nextX,nextY,brickX[i],brickY[i],brickW,brickH) then
      SFX(4)
      --make the ball bounce off brick
-     ballDeltaY = -ballDeltaY
      brickVisable[i] = false
+     ballDeltaY = -ballDeltaY 
      score = score + 10 
     end                 
   end
@@ -109,22 +109,23 @@ end
 
 function serveBall() 
  ballX = 5      --ball Y pos
- ballY = 33      --ball X pos
- ballDeltaX = 1.2 --ball speed for X
+ ballY = 70      --ball X pos
+ ballDeltaX = 1.2 --ball speed for X (1.2 for both)
  ballDeltaY = 1.2 --ball speed for Y       
 end 
 
 function buildBricks() 
  local i
+ local numBricks = 66
  brickX = {}
  brickY = {}
  brickVisable = {}
- for i =1,10 do
-   table.insert(brickX,5+(i-1)*(brickW+1))
-   table.insert(brickY,20)
+ for i =1,numBricks do
+   table.insert(brickX,5+((i-1)%15)*(brickW+1))
+   table.insert(brickY,20+math.floor((i-1)/16)*(brickH+1))
    table.insert(brickVisable,true)        
- end    
-end
+ end   
+end 
 
 function update_gameover()
  if btnp(5) then
@@ -159,7 +160,8 @@ end
 
 function draw_gameover()
  clear(0)
- print("GAME OVER",70,50)
+ --\xE8 is the LIKO-12 sad face, from the charmap
+ print("GAME OVER".." \xE8",70,50)
  color(11) --color of PRESS Z TO RESTART and PRESS C TO RETURN
  print("PRESS Z TO RESTART", 50, 60)
  print("PRESS C TO RETURN", 50, 70)
@@ -187,7 +189,8 @@ end
  print("SCORE:"..score, 50, 1, 128)    
 end
 
-function draw_win()  
+function draw_win()
+ --win screen code goes here  
 end
 
 --check ball collision with rect
@@ -277,3 +280,4 @@ if cX >= 0 then
   end
  end
 end
+                                                                                                                                                                                                                                                                                                                                                                                                  
