@@ -1,6 +1,19 @@
 --------------
--- BREAKOUT --
+-- BREAKOUT -- 
 --------------
+
+--GOALS
+-------------------------
+--Levels
+--combos
+--levels
+--powerups
+--different bricks
+--angle control
+--juicyness (particles!)
+--high score
+
+
 
 function _init()
  MODE = "START"
@@ -28,29 +41,52 @@ function update_game()
  elseif btnp(2) then --right arrow
   paddleX = paddleX + 5
   paddleDX = paddleDX + 5
- end
-  nextX = ballX + ballDeltaX
-  nextY = ballY + ballDeltaY  
+end
+
+if sticky and btnp(1) then
+ --launch ball up and left
+  sticky = false
+  ballDeltaX = -1
+  ballY = paddleH + 1
+  ballDeltaY = -1
+ elseif sticky and btnp(2) then
+ --launch ball up and right
+  sticky = false
+  ballDeltaX = 1
+  ballY = paddleH + 1
+  ballDeltaY = -1
+end
+ 
+   
+ --sticky paddle
+  if sticky then
+   ballX=paddleX+math.floor(paddleW/2)
+   ballY=paddleY-ballRadius-1
+  else 
+--regular ball physics
+   nextX = ballX + ballDeltaX
+   nextY = ballY + ballDeltaY  
  
  --bounce the ball off 
  --the screen edges (192x128 screen) 
- if nextX > 192 or nextX < 0 then
-   ballDeltaX = -ballDeltaX
-   SFX(0) --play the SFX
-  elseif nextY < 0 then
-   ballDeltaY = -ballDeltaY
-   SFX(0)
-   --if ball goes off the bottom
-   --subtract one life and play SFX 2
-   --and serve the ball again
-  end
+   if nextX > 192 or nextX < 0 then
+    ballDeltaX = -ballDeltaX
+    SFX(0) --play the SFX
+   elseif nextY < 0 then
+    ballDeltaY = -ballDeltaY
+    SFX(0)
+    --if ball goes off the bottom
+    --subtract one life and play SFX 2
+    --and serve the ball again
+    end
   --if ball and paddle collide
-  if ballCollide(nextX,nextY,paddleX, paddleY, paddleW, paddleH) then
-   SFX(1)
+   if ballCollide(nextX,nextY,paddleX, paddleY, paddleW, paddleH) then
+    SFX(1)
    --make the ball bounce off paddle
-   ballDeltaY = -ballDeltaY
-   score = score + 1 
-  end
+    ballDeltaY = -ballDeltaY
+    nextY = paddleY - ballRadius
+    score = score + 1 
+   end
    
    local i   
    for i = 1,#brickX do           
@@ -68,7 +104,7 @@ function update_game()
     ballY = nextY    
   
    if nextY > 128 then
-   SFX(2)
+    SFX(2)
     lives = lives - 1
     serveBall()         
    end
@@ -77,15 +113,20 @@ function update_game()
     SFX(3)
     MODE="GAMEOVER"
    end                                                                  
+ end
 end
 
 function update_start()
  clear()
  if btnp(5) then --btn 5 = Z
-  startGame()
+   startGame()
+   end
 end
 
 function update_win()
+ clear()
+-- if btnp(7) then
+ -- end
 end
 
 function startGame()
@@ -104,22 +145,31 @@ function startGame()
  
  lives=3        --number of lives
  score=0
+ sticky=true
+ 
  serveBall()             
 end
 
-function serveBall() 
- ballX = 5      --ball Y pos
- ballY = 70      --ball X pos
- ballDeltaX = 1.2 --ball speed for X (1.2 for both)
- ballDeltaY = 1.2 --ball speed for Y       
+function serveBall()
+ if not sticky then 
+   ballX = 5      --ball Y pos
+   ballY = 70      --ball X pos
+   ballDeltaX = 1 --ball speed for X (1.2 for both)
+   ballDeltaY = 1 --ball speed for Y
+  elseif sticky then
+   ballX=paddleX+math.floor(paddleW/2)
+   ballY=paddleY-ballRadius-1
+  end          
 end 
 
 function buildBricks() 
  local i
  local numBricks = 66
+ 
  brickX = {}
  brickY = {}
  brickVisable = {}
+ 
  for i =1,numBricks do
    table.insert(brickX,5+((i-1)%15)*(brickW+1))
    table.insert(brickY,20+math.floor((i-1)/16)*(brickH+1))
@@ -146,8 +196,6 @@ function _draw()
    draw_game()
   elseif MODE == "GAMEOVER" then
    draw_gameover()
-  elseif MODE == "RESET" then
-   draw_reset()
   end
 end
 
@@ -160,9 +208,10 @@ end
 
 function draw_gameover()
  clear(0)
- --\xE8 is the LIKO-12 sad face, from the charmap
+ --\xE8 is the LIKO-12 sad face,
+ --from the charmap program
  print("GAME OVER".." \xE8",70,50)
- color(11) --color of PRESS Z TO RESTART and PRESS C TO RETURN
+ color(11) --color of second row
  print("PRESS Z TO RESTART", 50, 60)
  print("PRESS C TO RETURN", 50, 70)
  color(8) --color of GAME OVER 
@@ -178,19 +227,30 @@ function draw_game()
 
 --draw bricks
 for i =1,#brickX do
-   if brickVisable then 
-    rect(brickX[i],brickY[i],brickW,brickH)
-   end                
+ if brickVisable[i] then 
+  rect(brickX[i],brickY[i],brickW,brickH)
+ end                
 end                        
+-- print("LIVES:"..lives, 1, 1, 128)
+-- print("SCORE:"..score, 50, 1, 128)
 
- 
 
- print("LIVES:"..lives, 1, 1, 128)
- print("SCORE:"..score, 50, 1, 128)    
+-----------------------------------
+--DEBUGGING
+-----------------------------------
+--print("BALLX:"..ballX, 1, 1, 128)
+--print("BALLY:"..ballY, 1, 1, 128)
+    
 end
 
+
 function draw_win()
- --win screen code goes here  
+ --win screen code goes here
+ color(7) --color of first row
+ print("STAGE PASSED! \xE4")
+ print("SCORE:"..score)
+ print("PRESS C TO CONTINUE")
+ color(9) --color of 1st row
 end
 
 --check ball collision with rect
@@ -278,6 +338,4 @@ if cX >= 0 then
  return false
    end
   end
- end
-end
-                                                                                                                                                                                                                                                                                                                                                                                                  
+ end                                                                                                                                                                                                                                                                                                                                                                                                 
