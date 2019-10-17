@@ -10,8 +10,8 @@ function _init()
  
  --directions for x and y
  --left, right, up, down
- dirX = {-1, 1, 0, 0}
- dirY = {0, 0, -1, 1}
+ dirX = {-1, 1,  0, 0}
+ dirY = { 0, 0, -1, 1}
  
  _upd = update_game
  _drw = draw_game
@@ -37,6 +37,7 @@ function startGame()
  --not flipped by default
  playerFlipped = 1
  aniTimer = 0 
+ playerMovement = nil
 end
 
 -------------------
@@ -45,14 +46,7 @@ end
 function update_game()
  for i=1,4 do
   if btnp(i) then
-    playerX = playerX + dirX[i]
-    playerY = playerY + dirY[i]
-    playerStartOffsetX = playerOffsetX - dirX[i]*8
-    playerStartOffsetY = playerOffsetY - dirY[i]*8
-    playerOffsetX = playerStartOffsetX
-    playerOffsetY = playerStartOffsetY
-    aniTimer=0
-    _upd=update_pTurn
+    movePlayer(dirX[i], dirY[i])
     return
   end
  end 
@@ -62,11 +56,13 @@ end
 function update_pTurn()
 --set 0.1 to another value to change player's speed
  aniTimer = min(aniTimer+0.125,1)
- playerOffsetX = playerStartOffsetX * (1-aniTimer)
- playerOffsetY = playerStartOffsetY * (1-aniTimer)
+ 
+ playerMovement()
+
+ --check if the animation if over
  if aniTimer == 1 then
   _upd=update_game
- end 
+ end
 end
 
 function update_gameover()
@@ -99,15 +95,20 @@ end
 -----------
 
 function getFrame(ani)
- return ani[math.floor(T/15)%#ani+1]
+ return ani[math.floor(T/8)%#ani+1]
 end
 
 function drawSprite(_Sprite,_X,_Y,_C, _FLIP)
  palt(0,false)
  pal(6,_C)
  
- --set _FLIP to either 1 or -1
- Sprite(_Sprite,_X,_Y, 0,_FLIP)
+ --check setting of playerFlipped
+ if playerFlipped == -1 then
+  Sprite(_Sprite, _X + 8, _Y, 0, _FLIP, 1)
+ elseif playerFlipped == 1 then 
+  Sprite(_Sprite,_X,_Y, 0, _FLIP, 1)
+ end
+ 
  pal()
 end
 
@@ -135,6 +136,54 @@ function mid(A,B,C)
   return B
   end
  end
+
 --------------
 -- GAMEPLAY --
 --------------
+function movePlayer(dx, dy)
+  local destX = playerX + dx
+  local destY = playerY + dy
+  --mget gets a coordinte on the map
+  local tile = mget(destX,destY)
+   
+   --flip the player sprite
+      if dx < 0 then
+       playerFlipped = -1
+      elseif dx > 0 then
+       playerFlipped = 1
+      end                             
+   
+   --check for collision with unwalkable
+   --tiles
+   if fget(tile,1) then
+     --wall tile
+      playerStartOffsetX = dx*8
+      playerStartOffsetY = dy*8
+      playerOffsetX = playerStartOffsetX 
+      playerOffsetY = playerStartOffsetY
+      aniTimer=0
+      playerMovement = movement_bump
+      _upd=update_pTurn                                                     
+   else
+    playerX = playerX + dx
+    playerY = playerY + dy
+   end                                                        
+end
+
+-------------
+--ANIMATIONS
+-------------
+function movement_walk()
+  playerOffsetX = playerStartOffsetX * (1-aniTimer)
+  playerOffsetY = playerStartOffsetY * (1-aniTimer)  
+end
+
+function movement_bump()
+  if aniTimer < 0.5 then
+   playerOffsetX = playerStartOffsetX * (aniTimer)
+   playerOffsetY = playerStartOffsetY * (aniTimer)       
+  else
+   playerOffsetX = playerStartOffsetX * (1-aniTimer)
+   playerOffsetY = playerStartOffsetY * (1-aniTimer)  
+  end
+end
