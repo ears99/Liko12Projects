@@ -24,12 +24,14 @@ function _update60()
 end
 
 function _draw()
- _drw()  
+ _drw()
+ --"Window"
+ print("HP:"..PMaxHP.."/"..PHP, 128, 1)  
 end
 
 function startGame()
- playerX = 6
- playerY = 7
+ playerX = 1
+ playerY = 1
  playerOffsetX = 0
  playerOffsetY = 0
  playerStartOffsetX = 0 
@@ -38,6 +40,8 @@ function startGame()
  playerFlipped = 1
  aniTimer = 0 
  playerMovement = nil
+ PHP = 10
+ PMaxHP = 10
 end
 
 -------------------
@@ -163,8 +167,12 @@ function movePlayer(dx, dy)
       playerOffsetY = playerStartOffsetY
       aniTimer=0
       playerMovement = movement_bump
-      _upd=update_pTurn                                                     
-   else
+      _upd=update_pTurn      
+      --if interact flag is set
+      if fget(tile, 2) then
+        trig_bump(tile, destX, destY)
+       end    
+    else
     playerX = playerX + dx
     playerY = playerY + dy
    end                                                        
@@ -187,3 +195,23 @@ function movement_bump()
    playerOffsetY = playerStartOffsetY * (1-aniTimer)  
   end
 end
+
+function trig_bump(_tile, _destX, _destY)
+ if _tile == 005 or _tile == 006 then
+   --vase
+   SFX(1)
+   mset(_destX, _destY, 002)
+ elseif _tile == 009 or _tile == 011 then
+   --chest
+   SFX(2)
+   mset(_destX, _destY, _tile-1)
+ elseif _tile == 007 then
+   --door
+   SFX(0)
+   mset(_destX, _destY, 002)
+ end 
+end
+
+------
+--UI--
+------
