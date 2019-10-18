@@ -25,8 +25,9 @@ end
 
 function _draw()
  _drw()
- --"Window"
- print("HP:"..PMaxHP.."/"..PHP, 128, 1)  
+ --draw the windows on top of everthing else
+ --windowcolor, bordercolor, textcolor
+ showWindow(0,6,7)
 end
 
 function startGame()
@@ -40,8 +41,9 @@ function startGame()
  playerFlipped = 1
  aniTimer = 0 
  playerMovement = nil
- PHP = 10
- PMaxHP = 10
+ --window table
+ window = {}
+ talkWindow = nil
 end
 
 -------------------
@@ -79,11 +81,6 @@ function draw_game()
  clear()
  map()
  drawSprite(getFrame(playerAni), playerX*8+playerOffsetX, playerY*8+playerOffsetY, 10, playerFlipped)
- 
- -- DEBUGGING
- -------------
- --print("PX:"..playerX, 1, 1, 128)
- --print("PY:"..playerY, 30,1, 128)
 end
 
 function draw_gameover()
@@ -115,6 +112,13 @@ function drawSprite(_Sprite,_X,_Y,_C, _FLIP)
  
  pal()
 end
+
+
+--function rectFill(_X,_Y,_W,_H,_C)
+ --rect(_X, _Y, _X+_W-1, _Y+_H-1)
+ --color(_C)
+--end  
+
 
 --LIKO-12 doesnt have all the functions the PICO-8 has (as far as i know)
 --so i'll have to write my own versions
@@ -209,9 +213,86 @@ function trig_bump(_tile, _destX, _destY)
    --door
    SFX(0)
    mset(_destX, _destY, 002)
+ elseif _tile == 012 then
+  --stone tablet
+  --addWindow(64, 64, 64, 32, {"HELLO WORLD", "THIS IS LINE 2"})
+  
+  --14 character limit,including space
+  --duration is in frames
+  showMsg("PORKLIKE",120)
  end 
 end
 
 ------
 --UI--
 ------
+
+--Window system
+
+function addWindow(_x, _y, _w, _h, _txt)
+ --window object
+ local w={x=_x, y=_y, w=_w, h=_h, txt=_txt}
+ --add the object to the window table
+ table.insert(window, w)
+ return w --return the object
+end
+
+function showWindow(_windowColor, _txtColor, _borderColor)
+ for i = 1,#window do
+  local w = window[i]
+  --window and window color
+  rect(w.x,w.y,w.w,w.h)
+  color(_windowColor)
+  --border of the window
+  rect(w.x+1,w.y+1,w.w-2,w.h-2)
+  color(_windowColor)
+  
+  rect(w.x+2,w.y+2,w.w-4,w.h-4)
+  color(_borderColor)
+  
+  --clip not working? can't move player 
+  --at all once 
+  --clip is called!
+  --animations don't play either - 
+  --it's as if the game was frozen
+  --and the text color 
+  --also gets applied as the border
+   
+  --clip(w.x,w.y,w.w-8,w.h-8)
+  
+  --display text
+  for j = 1,#w.txt do
+   local txt=w.txt[i]
+   
+   --can't print two lines 
+   --of text either
+   --:(
+   
+   print(txt.."\n", w.x+2, w.y+2)
+   --doesn't move cursor down without 
+   --clip,
+   --and even then it's not staying 
+   --within
+   --the bounds of the text box.
+   --w.y = w.y + 6
+   end
+  color(_txtColor)
+  --if window duration is not nil, then
+  --subtract one from duration until it reaches 0
+  --then make the window disappear
+  if w.dur ~=nil then
+   w.dur = w.dur - 1
+   if w.dur == 0 then
+     table.remove(window)
+   end
+  end 
+ end
+end
+
+--text box that disappears after an 
+--amount of time
+function showMsg(txt, dur)
+ local width=#txt*4+22 
+ local w = addWindow(63-width/2,50,width,13,{txt})
+ w.dur = dur 
+end
